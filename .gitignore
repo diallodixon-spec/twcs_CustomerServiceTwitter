@@ -1,4 +1,9 @@
 # Byte-compiled / optimized / DLL files
+shared-data/
+*.pyc
+ingestion/capstone-466722-c2915ddca9a5.json
+
+
 __pycache__/
 *.py[codz]
 *$py.class
