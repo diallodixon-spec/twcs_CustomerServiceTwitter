@@ -1,0 +1,64 @@
+version: "3.3"
+
+services:
+  ingestion:
+    build: ./ingestion
+    container_name: ingestion
+    volumes:
+      - ./shared-data:/opt/CustomerServiceTwitter/shared-data
+      - ./ingestion:/opt/CustomerServiceTwitter/ingestion
+    environment:
+      - GOOGLE_SHEET_URL=https://docs.google.com/spreadsheets/d/1b8rK86x4P2GISVjgA1UKhcuBgb1FsaaqxrEdaqK8VaE/edit
+      - WORKSHEET_NAME=ProcessingTest
+      - GOOGLE_CREDENTIALS=/opt/CustomerServiceTwitter/ingestion/capstone-466722-c2915ddca9a5.json
+
+  metrics:
+    build: ./metrics
+    container_name: metrics
+    volumes:
+      - ./shared-data:/app/data
+      - ./metrics:/app
+    depends_on:
+      - ingestion
+    entrypoint: ["/app/wait-for-ingestion.sh"]
+
+  sentiment:
+    build: ./sentiment
+    container_name: sentiment
+    volumes:
+      - ./shared-data:/app/data
+      - ./sentiment:/app
+    depends_on:
+      - metrics
+    entrypoint: ["/app/wait-for-metrics.sh"]
+
+  bot-detection:
+    build: ./bot-detection
+    container_name: bot-detection
+    volumes:
+      - ./shared-data:/app/data
+      - ./bot-detection:/app
+    depends_on:
+      - sentiment
+    entrypoint: ["/app/wait-for-sentiment.sh"]
+
+  topic-classifier:
+    build: ./topic-classifier
+    container_name: topic-classifier
+    volumes:
+      - ./shared-data:/app/data
+      - ./topic-classifier:/app
+    depends_on:
+      - bot-detection
+    entrypoint: ["/app/wait-for-bot.sh"]
+
+  clustering:
+    build: ./clustering
+    container_name: clustering
+    volumes:
+      - ./shared-data:/app/data
+      - ./clustering:/app
+    depends_on:
+      - topic-classifier
+    entrypoint: ["/app/wait-for-topic.sh"]
+
